@@ -14,13 +14,15 @@ class Settings(BaseSettings):
     )
 
     # Application
-    env: str = "development"
+    environment: str = "development"
     log_level: str = "INFO"
     host: str = "0.0.0.0"
     port: int = 8000
+    enable_mock_providers: bool = True
 
     # Artifact storage
     artifact_dir: str = "./artifacts"
+    jobs_dir: str = "./artifacts/jobs"
 
     # CORS — comma-separated list of allowed origins
     cors_origins: str = "http://localhost:3000,http://localhost:5173"
@@ -28,6 +30,11 @@ class Settings(BaseSettings):
     @property
     def cors_origins_list(self) -> list[str]:
         return [o.strip() for o in self.cors_origins.split(",") if o.strip()]
+
+    @property
+    def env(self) -> str:
+        """Backward-compatible alias for older references."""
+        return self.environment
 
 
 class NvidiaIsingSettings(BaseSettings):

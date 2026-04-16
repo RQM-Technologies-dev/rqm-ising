@@ -25,8 +25,9 @@
 - **Provider registry** — enumerate available quantum operation providers and their capabilities
 - **Calibration workflows** — submit calibration tasks and retrieve structured analysis results
 - **QEC workflows** — submit syndrome decoding tasks and benchmark decoder approaches
-- **Job management** — track async workflow jobs with status, artifacts, and result summaries
-- **Benchmark reporting** — generate structured reports comparing decoder or calibration approaches
+- **Persistent local job management** — in-memory cache backed by local JSON job snapshots for restart-safe development
+- **Artifact/report lifecycle** — workflow completions emit structured JSON reports and attach artifact paths to jobs
+- **Studio-facing benchmark reporting** — generate comparison-rich report payloads designed for future `rqm-studio` UI views
 - **NVIDIA Ising adapter boundary** — clean integration stubs for NVIDIA Ising calibration and decoding
 
 ---
@@ -83,7 +84,8 @@ docker run -p 8000:8000 rqm-ising
 |--------|------|-------------|
 | GET | `/health` | Health check |
 | GET | `/version` | API version |
-| GET | `/v1/providers` | List providers and capabilities |
+| GET | `/v1/providers` | List providers with status and integration mode |
+| GET | `/v1/providers/{provider_name}` | Provider health/detail view |
 | POST | `/v1/calibration/analyze` | Analyze calibration experiment metadata |
 | POST | `/v1/calibration/run` | Submit a calibration workflow job |
 | POST | `/v1/qec/decode` | Decode syndrome data |
@@ -93,6 +95,15 @@ docker run -p 8000:8000 rqm-ising
 | GET | `/v1/benchmarks/report` | Get a structured benchmark report |
 
 Full API documentation: [docs/api.md](docs/api.md)
+
+## Local persistence and artifacts
+
+- Jobs are cached in memory and persisted to disk at `artifacts/jobs/<job_id>/job.json`.
+- On startup, the service reloads persisted jobs into memory.
+- Calibration and QEC benchmark workflow submissions generate structured artifacts:
+  - `artifacts/jobs/<job_id>/calibration_report.json`
+  - `artifacts/jobs/<job_id>/benchmark_report.json`
+- Job records include `artifact_paths` and `result_summary` fields that point directly to report outputs.
 
 ---
 

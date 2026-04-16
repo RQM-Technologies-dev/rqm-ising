@@ -2,16 +2,11 @@
 
 from fastapi import APIRouter, Request
 
-from rqm_ising.utils.ids import new_request_id
+from rqm_ising.api.responses import success_response
 
 router = APIRouter(tags=["meta"])
 
 
 @router.get("/health")
 async def health(request: Request):
-    request_id = getattr(request.state, "request_id", new_request_id())
-    return {
-        "status": "success",
-        "data": {"healthy": True},
-        "meta": {"request_id": request_id, "processing_time_ms": None},
-    }
+    return success_response(request, data={"healthy": True})

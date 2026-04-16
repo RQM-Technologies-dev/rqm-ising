@@ -1,24 +1,45 @@
 """
-In-memory job service.
+Job service with in-memory cache plus filesystem persistence.
 
-Manages the lifecycle of async workflow jobs. This implementation uses a
-thread-safe in-memory store. The interface is designed so the backing store
-can be replaced with a database implementation without changing callers.
+Jobs are stored in memory for fast access and persisted under:
+artifacts/jobs/{job_id}/job.json
 """
 
 import threading
 
+from rqm_ising.logging import get_logger
 from rqm_ising.schemas.jobs import Job, JobStatus, JobType
+from rqm_ising.services.job_storage import JobStorage
 from rqm_ising.utils.ids import new_job_id
 from rqm_ising.utils.timestamps import utcnow
 
+logger = get_logger(__name__)
+
 
 class JobService:
-    """CRUD operations for workflow jobs, backed by an in-memory dictionary."""
+    """CRUD operations for workflow jobs with durable local persistence."""
 
-    def __init__(self) -> None:
+    def __init__(self, storage: JobStorage | None = None) -> None:
         self._jobs: dict[str, Job] = {}
         self._lock = threading.Lock()
+        self._storage = storage or JobStorage()
+        self._storage.ensure_dirs()
+
+    def load_persisted_jobs(self) -> int:
+        """Load persisted jobs from disk into the in-memory cache."""
+        loaded_jobs = self._storage.load_jobs()
+        with self._lock:
+            self._jobs = {job.job_id: job for job in loaded_jobs}
+        logger.info(
+            "Loaded persisted jobs from disk: count=%d jobs_dir=%s",
+            len(loaded_jobs),
+            self._storage.jobs_dir,
+        )
+        return len(loaded_jobs)
+
+    def _persist_job(self, job: Job) -> None:
+        path = self._storage.save_job(job)
+        logger.info("Persisted job record: job_id=%s path=%s", job.job_id, path)
 
     def create(
         self,
@@ -41,6 +62,13 @@ class JobService:
         )
         with self._lock:
             self._jobs[job.job_id] = job
+        self._persist_job(job)
+        logger.info(
+            "Created workflow job: job_id=%s type=%s provider=%s",
+            job.job_id,
+            job.type,
+            job.provider,
+        )
         return job
 
     def get(self, job_id: str) -> Job | None:
@@ -74,7 +102,9 @@ class JobService:
                 }
             )
             self._jobs[job_id] = updated
-            return updated
+        self._persist_job(updated)
+        logger.info("Updated workflow job: job_id=%s status=%s", job_id, status)
+        return updated
 
 
 # Module-level singleton — suitable for the current in-memory implementation.
@@ -84,3 +114,9 @@ _job_service = JobService()
 
 def get_job_service() -> JobService:
     return _job_service
+
+
+def set_job_service(service: JobService) -> None:
+    """Replace the module singleton job service (primarily for tests/startup)."""
+    global _job_service
+    _job_service = service

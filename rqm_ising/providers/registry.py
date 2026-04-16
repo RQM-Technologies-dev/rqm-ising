@@ -1,5 +1,6 @@
 """Provider registry — runtime map of available provider implementations."""
 
+from rqm_ising.config import get_settings
 from rqm_ising.providers.base import BaseProvider
 
 
@@ -56,7 +57,9 @@ def _bootstrap_default_providers() -> None:
     """Register built-in provider implementations."""
     from rqm_ising.providers.nvidia_ising import NvidiaIsingProvider
 
-    _registry.register(NvidiaIsingProvider())
+    settings = get_settings()
+    if settings.enable_mock_providers:
+        _registry.register(NvidiaIsingProvider())
 
 
 # Bootstrap on module import so the registry is ready before the first request

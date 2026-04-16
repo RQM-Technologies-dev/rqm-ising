@@ -8,7 +8,13 @@ from rqm_ising.schemas.calibration import (
     CalibrationRunRequest,
     CalibrationRunResponse,
 )
-from rqm_ising.schemas.providers import ProviderCapability, ProviderInfo
+from rqm_ising.schemas.providers import (
+    ProviderCapability,
+    ProviderDetailResponse,
+    ProviderInfo,
+    ProviderIntegrationMode,
+    ProviderStatus,
+)
 from rqm_ising.schemas.qec import (
     QECBenchmarkRequest,
     QECBenchmarkRunResponse,
@@ -65,15 +71,67 @@ class BaseProvider(ABC):
         """Return True if the provider backend is currently reachable."""
         return True
 
+    @property
+    def credentials_configured(self) -> bool:
+        """Return True if provider credentials/config are present."""
+        return False
+
+    @property
+    def externally_connected(self) -> bool:
+        """Return True if requests are sent to an external backend."""
+        return False
+
+    @property
+    def mock_only(self) -> bool:
+        """Return True if provider is currently mock-only."""
+        return not self.externally_connected
+
+    @property
+    def status(self) -> ProviderStatus:
+        return ProviderStatus.available if self.is_available else ProviderStatus.unavailable
+
+    @property
+    def integration_mode(self) -> ProviderIntegrationMode:
+        if not self.is_available:
+            return ProviderIntegrationMode.unavailable
+        if self.externally_connected and self.credentials_configured:
+            return ProviderIntegrationMode.configured
+        return ProviderIntegrationMode.mock
+
+    @property
+    def summary(self) -> str:
+        if self.integration_mode == ProviderIntegrationMode.configured:
+            return "Provider configured and available for external execution."
+        if self.integration_mode == ProviderIntegrationMode.mock:
+            return "Provider running in mock mode for local development."
+        return "Provider unavailable."
+
     def to_info(self) -> ProviderInfo:
         """Serialize provider identity to ProviderInfo schema."""
         return ProviderInfo(
-            provider_id=self.provider_id,
+            name=self.provider_id,
+            display_name=self.display_name,
+            capabilities=self.capabilities,
+            status=self.status,
+            integration_mode=self.integration_mode,
+            summary=self.summary,
+        )
+
+    def to_detail(self) -> ProviderDetailResponse:
+        """Serialize provider detail for status endpoint."""
+        return ProviderDetailResponse(
+            name=self.provider_id,
             display_name=self.display_name,
             version=self.version,
             capabilities=self.capabilities,
+            status=self.status,
+            availability=self.is_available,
+            credentials_configured=self.credentials_configured,
+            externally_connected=self.externally_connected,
+            mock_only=self.mock_only,
+            integration_mode=self.integration_mode,
+            summary=self.summary,
             description=self.description,
-            is_available=self.is_available,
         )
 
     # ── Operations ────────────────────────────────────────────────────────────

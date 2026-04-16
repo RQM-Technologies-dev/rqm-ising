@@ -48,8 +48,11 @@ def test_get_job_fields(client):
     assert data["status"] == "success"
     job = data["data"]
     assert job["job_id"] == job_id
-    assert job["status"] == "pending"
+    assert job["status"] == "completed"
     assert job["provider"] == "nvidia_ising"
+    assert job["artifact_paths"]
+    assert job["artifact_paths"][0].endswith("/calibration_report.json")
+    assert "report_artifact" in job["result_summary"]
     assert "created_at" in job
     assert "updated_at" in job
 

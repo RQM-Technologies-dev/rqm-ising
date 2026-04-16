@@ -1,19 +1,19 @@
 """Job schemas."""
 
 from datetime import datetime
-from enum import Enum
+from enum import StrEnum
 
 from pydantic import BaseModel, Field
 
 
-class JobStatus(str, Enum):
+class JobStatus(StrEnum):
     pending = "pending"
     running = "running"
     completed = "completed"
     failed = "failed"
 
 
-class JobType(str, Enum):
+class JobType(StrEnum):
     calibration_analysis = "calibration_analysis"
     calibration_workflow = "calibration_workflow"
     qec_decode = "qec_decode"

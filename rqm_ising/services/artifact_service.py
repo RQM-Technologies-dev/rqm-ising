@@ -6,14 +6,14 @@ storage (e.g. S3-compatible) without changing callers.
 """
 
 import json
-import logging
 from pathlib import Path
 
 from rqm_ising.config import get_settings
+from rqm_ising.logging import get_logger
 from rqm_ising.utils.ids import new_artifact_id
 from rqm_ising.utils.timestamps import utcnow_iso
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class ArtifactService:
@@ -43,7 +43,7 @@ class ArtifactService:
             "data": data,
         }
         file_path.write_text(json.dumps(payload, indent=2, default=str), encoding="utf-8")
-        logger.debug("Artifact written: %s", file_path)
+        logger.info("Artifact written: path=%s", file_path)
         return file_path
 
     def read_json(self, file_path: str | Path) -> dict:

@@ -79,13 +79,22 @@ POST /v1/calibration/analyze
 
 ---
 
-## Persistence
+## Persistence and Artifact Lifecycle
 
-Phase 1 uses:
-- **In-memory job store** (`JobService`) — resets on restart, suitable for development
-- **Local filesystem artifacts** (`ArtifactService`) — writes JSON files to `./artifacts/`
+Current local persistence uses filesystem-backed services:
 
-Phase 2+ will replace these with durable backends without requiring API contract changes.
+- **Job storage** (`JobService` + `JobStorage`):
+  - In-memory cache for fast reads
+  - Durable snapshots to `artifacts/jobs/{job_id}/job.json`
+  - Startup reload via FastAPI lifespan to recover persisted jobs after restart
+- **Artifact storage** (`ArtifactService`):
+  - JSON report outputs written under `./artifacts/`
+  - Calibration workflow writes `calibration_report.json` per job
+  - QEC benchmark workflow writes `benchmark_report.json` per job
+  - Benchmark report endpoint writes report artifacts under `artifacts/benchmarks/`
+
+Job records include `artifact_paths` and `result_summary` so Studio can directly locate
+first-class outputs.
 
 ---
 
@@ -108,11 +117,22 @@ class BaseProvider(ABC):
     display_name: str
     version: str
     capabilities: list[ProviderCapability]
+    credentials_configured: bool
+    externally_connected: bool
+    mock_only: bool
+    status: ProviderStatus
+    integration_mode: ProviderIntegrationMode
+    summary: str
 
     def run_calibration_analysis(request) -> CalibrationAnalysisResult: ...
     def run_calibration_workflow(request) -> CalibrationRunResponse: ...
     def run_qec_decoding(request) -> QECDecodeSummary: ...
     def run_qec_benchmark(request) -> QECBenchmarkRunResponse: ...
 ```
+
+Provider API shape:
+- `GET /v1/providers` returns Studio-ready summary fields (`name`, `display_name`,
+  `capabilities`, `status`, `integration_mode`, `summary`)
+- `GET /v1/providers/{provider_name}` returns provider detail status/health fields.
 
 See `PROJECT_RULES.md` for full provider implementation requirements.

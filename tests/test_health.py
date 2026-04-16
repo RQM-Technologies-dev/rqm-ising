@@ -11,6 +11,7 @@ def test_health_envelope(client):
     assert data["status"] == "success"
     assert data["data"]["healthy"] is True
     assert "request_id" in data["meta"]
+    assert "processing_time_ms" in data["meta"]
 
 
 def test_version_returns_200(client):
@@ -18,7 +19,9 @@ def test_version_returns_200(client):
     assert response.status_code == 200
 
 
-def test_version_field(client):
+def test_version_envelope(client):
     data = client.get("/version").json()
-    assert "version" in data
-    assert data["version"] == "0.1.0"
+    assert data["status"] == "success"
+    assert data["data"]["version"] == "0.1.0"
+    assert "request_id" in data["meta"]
+    assert "processing_time_ms" in data["meta"]

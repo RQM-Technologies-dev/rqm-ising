@@ -48,3 +48,5 @@ class QECBenchmarkRunResponse(BaseModel):
     provider: str
     benchmark_id: str
     status: str
+    artifact_paths: list[str] = Field(default_factory=list)
+    result_summary: dict = Field(default_factory=dict)

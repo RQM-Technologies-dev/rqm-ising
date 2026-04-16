@@ -80,6 +80,20 @@ class NvidiaIsingProvider(BaseProvider):
         # In live mode, availability depends on the backend being reachable.
         return True
 
+    @property
+    def credentials_configured(self) -> bool:
+        return self._client.is_live
+
+    @property
+    def externally_connected(self) -> bool:
+        return self._client.is_live
+
+    @property
+    def summary(self) -> str:
+        if self._client.is_live:
+            return "NVIDIA Ising configured; external integration path enabled."
+        return "NVIDIA Ising running in local mock mode; external calls are stubbed."
+
     # ── BaseProvider interface ─────────────────────────────────────────────────
 
     def run_calibration_analysis(

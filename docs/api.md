@@ -39,10 +39,17 @@ Health check. Returns `{"healthy": true}` in the `data` field.
 
 ### GET /version
 
-Returns the API version string.
+Returns the API version string in the standard success envelope.
 
 ```json
-{"version": "0.1.0"}
+{
+  "status": "success",
+  "data": {"version": "0.1.0"},
+  "meta": {
+    "request_id": "req_abc123",
+    "processing_time_ms": 0.8
+  }
+}
 ```
 
 ---
@@ -58,15 +65,37 @@ List all registered providers and their capabilities.
 {
   "providers": [
     {
-      "provider_id": "nvidia_ising",
+      "name": "nvidia_ising",
       "display_name": "NVIDIA Ising",
-      "version": "0.1.0-stub",
       "capabilities": ["calibration_analysis", "calibration_workflows", "qec_decoding", "qec_benchmarking"],
-      "description": "...",
-      "is_available": true
+      "status": "available",
+      "integration_mode": "mock",
+      "summary": "NVIDIA Ising running in local mock mode; external calls are stubbed."
     }
   ],
   "total": 1
+}
+```
+
+### GET /v1/providers/{provider_name}
+
+Returns provider detail and integration health metadata.
+
+**Response `data`:**
+```json
+{
+  "name": "nvidia_ising",
+  "display_name": "NVIDIA Ising",
+  "version": "0.1.0-stub",
+  "capabilities": ["calibration_analysis", "calibration_workflows", "qec_decoding", "qec_benchmarking"],
+  "status": "available",
+  "availability": true,
+  "credentials_configured": false,
+  "externally_connected": false,
+  "mock_only": true,
+  "integration_mode": "mock",
+  "summary": "NVIDIA Ising running in local mock mode; external calls are stubbed.",
+  "description": "Integration adapter for NVIDIA Ising quantum operations."
 }
 ```
 
@@ -126,7 +155,13 @@ Submit a calibration workflow job. Returns a job handle.
   "job_id": "job_abcdef01234567",
   "provider": "nvidia_ising",
   "experiment_id": "exp-001",
-  "status": "pending"
+  "status": "completed",
+  "artifact_paths": ["/workspace/artifacts/jobs/job_abcdef01234567/calibration_report.json"],
+  "result_summary": {
+    "report_artifact": "/workspace/artifacts/jobs/job_abcdef01234567/calibration_report.json",
+    "report_type": "calibration_report",
+    "summary": "Calibration workflow completed with structured report artifact output."
+  }
 }
 ```
 
@@ -188,7 +223,14 @@ Submit a QEC benchmark job comparing decoder approaches.
   "job_id": "job_abcdef01234567",
   "provider": "nvidia_ising",
   "benchmark_id": "bench-001",
-  "status": "pending"
+  "status": "completed",
+  "artifact_paths": ["/workspace/artifacts/jobs/job_abcdef01234567/benchmark_report.json"],
+  "result_summary": {
+    "message": "QEC benchmark completed with Studio-ready benchmark artifact.",
+    "benchmark_report_path": "/workspace/artifacts/jobs/job_abcdef01234567/benchmark_report.json",
+    "provider_status": "mock_mode",
+    "benchmark_id": "bench-001"
+  }
 }
 ```
 
@@ -198,7 +240,7 @@ Submit a QEC benchmark job comparing decoder approaches.
 
 ### GET /v1/jobs
 
-List all jobs.
+List all jobs (in-memory cache backed by persisted filesystem records).
 
 **Response `data`:**
 ```json
@@ -217,11 +259,15 @@ Get a specific job by ID.
 {
   "job_id": "job_abcdef01234567",
   "type": "calibration_workflow",
-  "status": "pending",
+  "status": "completed",
   "provider": "nvidia_ising",
   "input_summary": {"experiment_id": "exp-001", "qubit_count": 4},
-  "artifact_paths": [],
-  "result_summary": null,
+  "artifact_paths": ["/workspace/artifacts/jobs/job_abcdef01234567/calibration_report.json"],
+  "result_summary": {
+    "report_artifact": "/workspace/artifacts/jobs/job_abcdef01234567/calibration_report.json",
+    "report_type": "calibration_report",
+    "summary": "Calibration workflow completed with structured report artifact output."
+  },
   "created_at": "2024-01-01T00:00:00+00:00",
   "updated_at": "2024-01-01T00:00:00+00:00"
 }
@@ -246,14 +292,46 @@ Return a structured benchmark report.
 ```json
 {
   "report_id": "report_abcd1234",
-  "code_type": "surface_code",
-  "distance": 5,
+  "benchmark_type": "qec_surface_code_d5",
   "provider": "nvidia_ising",
-  "entries": [
-    {"decoder": "mwpm", "logical_error_rate": 0.0012, "avg_decode_time_ms": 4.2, "rounds_tested": 1000},
-    {"decoder": "union_find", "logical_error_rate": 0.0018, "avg_decode_time_ms": 1.8, "rounds_tested": 1000}
+  "created_at": "2026-04-16T00:00:00+00:00",
+  "summary": {
+    "headline": "QEC benchmark for surface_code d=5",
+    "key_findings": ["Candidate decoder reduces latency in mock benchmark path."]
+  },
+  "comparisons": [
+    {
+      "decoder_baseline": "mwpm",
+      "decoder_candidate": "union_find",
+      "logical_error_rate": 0.0018,
+      "syndrome_density_reduction": 0.17,
+      "estimated_latency_ms": 1.8,
+      "confidence": 0.74,
+      "notes": "Mock comparison values for Studio integration prototyping."
+    }
   ],
-  "summary": "...",
-  "artifact_path": "./artifacts/benchmarks/report_abcd1234.json"
+  "metrics": [
+    {
+      "name": "estimated_latency_ms",
+      "value": 1.8,
+      "unit": "ms",
+      "direction": "lower_is_better",
+      "notes": "Estimated candidate decode latency."
+    }
+  ],
+  "artifact_paths": ["/workspace/artifacts/benchmarks/report_abcd1234.json"],
+  "artifacts": [
+    {
+      "path": "/workspace/artifacts/benchmarks/report_abcd1234.json",
+      "kind": "benchmark_report",
+      "format": "json",
+      "label": "QEC benchmark report"
+    }
+  ],
+  "recommended_next_step": "Run provider-backed benchmark with production syndrome traces and validate candidate decoder confidence interval.",
+  "notes": [
+    "Mock report generated for local development.",
+    "Replace values with provider-derived benchmark telemetry when available."
+  ]
 }
 ```

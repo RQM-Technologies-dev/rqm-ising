@@ -71,4 +71,7 @@ def test_calibration_run_envelope(client):
     assert data["status"] == "success"
     assert "job_id" in data["data"]
     assert data["data"]["job_id"].startswith("job_")
-    assert data["data"]["status"] == "pending"
+    assert data["data"]["status"] == "completed"
+    assert data["data"]["artifact_paths"]
+    assert data["data"]["artifact_paths"][0].endswith("/calibration_report.json")
+    assert "report_artifact" in data["data"]["result_summary"]

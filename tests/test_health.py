@@ -1,5 +1,7 @@
 """Tests for /health and /version endpoints."""
 
+from rqm_ising import __version__
+
 
 def test_health_returns_200(client):
     response = client.get("/health")
@@ -22,6 +24,6 @@ def test_version_returns_200(client):
 def test_version_envelope(client):
     data = client.get("/version").json()
     assert data["status"] == "success"
-    assert data["data"]["version"] == "0.1.0"
+    assert data["data"]["version"] == __version__
     assert "request_id" in data["meta"]
     assert "processing_time_ms" in data["meta"]

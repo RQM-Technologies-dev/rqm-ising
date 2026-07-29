@@ -84,6 +84,12 @@ docker build -t rqm-ising .
 docker run -p 8000:8000 rqm-ising
 ```
 
+Versioned multi-architecture images are published to
+`ghcr.io/rqm-technologies-dev/rqm-ising` after a reviewed Release Please pull
+request is merged. Published images run as an unprivileged user, include
+BuildKit provenance and an SBOM, and must pass health and fixable-critical
+vulnerability gates.
+
 ---
 
 ## API Overview

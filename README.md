@@ -1,20 +1,28 @@
 # rqm-ising
 
-**The quantum operations integration layer for calibration and QEC workflows in the RQM ecosystem.**
+> **Archived July 28, 2026.** This repository preserves a closed NVIDIA Ising
+> calibration/QEC integration attempt. The provider client never advanced
+> beyond illustrative stubs, and configured live operations remain
+> unimplemented. It is not an active RQM Studio service, dependency, release,
+> or product roadmap.
 
-`rqm-ising` connects external quantum hardware capabilities—initially NVIDIA Ising—into the broader RQM stack. It does not contain RQM's native compiler or quaternion math logic. Instead, it orchestrates calibration workflows, QEC decoder workflows, experiment/job management, and benchmark reporting through clean, typed REST APIs.
-
----
-
-## Better Coordinates for Better Measurement
-
-This project uses quaternions because they preserve more of what physical systems are doing: phase, rotation, orientation, polarization, and coherence. Standard complex-number methods are powerful, but they can flatten these relationships too early. Quaternionic coordinates keep them together as one structured object, giving software a richer view of the measured system.
-
-For RQM Technologies, better coordinates mean better measurement: more informative diagnostics, cleaner transformations, and more precise control across quantum, wave, sensing, imaging, and communications workflows.
+The code is retained read-only for historical architecture and schema
+reference. Mock outputs are not measurements, provider results, customer
+evidence, or proof of a working NVIDIA integration.
 
 ---
 
-## Role in the RQM Ecosystem
+## Scientific boundary
+
+Complete quaternion and complete conventional complex/SU(2) representations
+carry the same information for the supported transformations. Quaternion
+coordinates may make ordered rotation structure, residuals, or diagnostics
+easier to implement and inspect; they do not create additional measurement
+information or establish unique calibration or QEC performance.
+
+---
+
+## Historical role
 
 | Repo | Responsibility |
 |------|---------------|
@@ -22,9 +30,12 @@ For RQM Technologies, better coordinates mean better measurement: more informati
 | `rqm-compiler` | Circuit IR and optimization passes |
 | `rqm-api` | Circuit optimization and execution API |
 | `rqm-studio` | Main frontend product shell |
-| **`rqm-ising`** | Quantum operations integration layer for calibration + QEC workflows |
+| **`rqm-ising`** | Archived NVIDIA Ising integration attempt |
 
-`rqm-ising` treats NVIDIA Ising as one external provider among potentially many. Its provider abstraction is designed to accommodate future hardware backends beyond NVIDIA.
+No active RQM Studio surface should call this service. A future provider
+integration must begin from a real provider contract, named consumer,
+representative workflow, and independently approved roadmap rather than
+reactivating the mock responses.
 
 ---
 

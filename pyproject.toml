@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "rqm-ising"
-version = "0.1.0"
+version = "0.2.0"
 description = "Quantum operations integration layer for calibration and QEC workflows in the RQM ecosystem"
 readme = "README.md"
 license = { file = "LICENSE" }

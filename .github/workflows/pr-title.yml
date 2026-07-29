@@ -20,4 +20,3 @@ jobs:
             echo "Use a Conventional Commit title, for example: feat: add capability"
             exit 1
           fi
-

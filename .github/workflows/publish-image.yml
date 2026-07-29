@@ -135,4 +135,3 @@ jobs:
             '{schema_version:"rqm.container-release.v0.1", image:$image, tag:$tag, digest:$digest, commit:$commit, platforms:["linux/amd64","linux/arm64"], sbom:true, provenance:"mode=max", github_attestation:true}' \
             > release-manifest.json
           gh release upload "$TAG_NAME" release-manifest.json --clobber
-

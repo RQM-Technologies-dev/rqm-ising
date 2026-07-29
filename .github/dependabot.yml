@@ -32,4 +32,3 @@ updates:
       prefix: build
       include: scope
     open-pull-requests-limit: 5
-
